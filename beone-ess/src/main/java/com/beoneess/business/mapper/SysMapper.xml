@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.beoneess.business.mapper.SysMapper">
+
+
+    <!-- 通过角色ID查询所有权限，判断是否己授权  -->
+    <select id="findDgRight" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT  TAB.RIGHT_ID AS "id",
+                TAB.RIGHT_NAME AS "name",
+                TAB.RIGHT_ICON AS "icon",
+                TAB.RIGHT_PID AS "pid",
+                ( SELECT COUNT(1)
+                    FROM SYS_RIGHT SR
+                    WHERE SR.RIGHT_YWPT LIKE '%'||${ywpt}||'%'
+                    START WITH SR.RIGHT_ID = TAB.RIGHT_ID
+                    CONNECT BY PRIOR SR.RIGHT_ID = SR.RIGHT_PID) AS "scn",
+                ( SELECT COUNT(1)
+                    FROM SYS_RIGHT T
+                    LEFT JOIN SYS_ORG_MENU SO
+                    ON SO.RIGHT_ID = T.RIGHT_ID
+                    AND SO.ORG_ID = ${borg_id}
+                  WHERE SO.RIGHT_ID IS NOT NULL
+                  START WITH T.RIGHT_ID = TAB.RIGHT_ID
+                  CONNECT BY PRIOR T.RIGHT_ID = T.RIGHT_PID) AS "chk"
+        FROM SYS_RIGHT TAB
+        WHERE TAB.RIGHT_YWPT LIKE '%'||${ywpt}||'%' AND  TAB.RIGHT_PID = ${id}
+        ORDER BY TAB.RIGHT_ORDER ASC
+    </select>
+
+
+    <!-- 通过角色ID查询所有权限，判断是否己授权  -->
+    <select id="findOrgRight" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT TAB.RIGHT_ID as "right_id" FROM SYS_ORG_MENU TAB WHERE TAB.ORG_ID = ${borg_id}
+        <if test="role_id != null and role_id != ''">
+            AND EXISTS (SELECT 1
+            FROM SYS_ROLE_RIGHT SRR
+            WHERE SRR.RIGHT_ID = TAB.RIGHT_ID
+            AND SRR.ROLE_ID = #{role_id})
+        </if>
+    </select>
+
+    <!--查询拥有权限的菜单编码-->
+    <select id="findRightCode" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT T.Right_Code FROM SYS_ORG_MENU TAB
+            LEFT JOIN SYS_RIGHT T ON T.RIGHT_ID = TAB.RIGHT_ID
+        <where>
+            <if test="org_id != null and org_id != ''">AND TAB.ORG_ID = #{org_id}</if>
+            <if test="type != null and type != ''">AND T.RIGHT_TYPE = #{type}</if>
+            <if test="user_id != null and user_id != ''">
+                AND EXISTS (SELECT 1
+                    FROM SYS_ROLE_RIGHT SR
+                    LEFT JOIN SYS_ROLE_USER SU ON SU.ROLE_ID = SR.ROLE_ID
+                    WHERE SR.RIGHT_ID = TAB.RIGHT_ID
+                    AND SU.USER_ID = #{user_id}
+                )
+            </if>
+        </where>
+    </select>
+
+    <!-- 角色授权组织菜单查询 -->
+    <select id="findDgOrgRight" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT TAB.RIGHT_ID AS "id", TAB.RIGHT_NAME AS "name", TAB.RIGHT_ICON AS "icon", TAB.RIGHT_PID AS "pid"
+            , (SELECT COUNT(1) FROM SYS_RIGHT SR
+                WHERE EXISTS (SELECT 1 FROM SYS_ORG_MENU M
+                    WHERE M.RIGHT_ID = SR.RIGHT_ID
+                    AND M.ORG_ID = #{borg_id})
+                START WITH SR.RIGHT_ID = TAB.RIGHT_ID
+                CONNECT BY PRIOR SR.RIGHT_ID = SR.RIGHT_PID) AS "scn"
+            ,(SELECT COUNT(1) FROM SYS_RIGHT SR
+                WHERE EXISTS (SELECT 1 FROM SYS_ROLE_RIGHT SRR
+                    WHERE SRR.RIGHT_ID = SR.RIGHT_ID
+                    AND SRR.ROLE_ID = #{role_id})
+                START WITH SR.RIGHT_ID = TAB.RIGHT_ID
+                CONNECT BY PRIOR SR.RIGHT_ID = SR.RIGHT_PID) AS "chk"
+        FROM SYS_RIGHT TAB
+        WHERE EXISTS (SELECT 1 FROM SYS_ORG_MENU MENU
+            WHERE MENU.RIGHT_ID = TAB.RIGHT_ID
+                AND MENU.ORG_ID = #{borg_id})
+        AND INSTR(TAB.RIGHT_YWPT,#{xmlx}) > 0
+        AND TAB.RIGHT_PID = #{id}
+        ORDER BY TAB.RIGHT_ORDER ASC
+    </select>
+
+    <!-- 角色授权用户列表查询 -->
+    <select id="selRoleUserCount" resultType="int" parameterType="java.util.Map">
+        SELECT COUNT(1) FROM SYS_USER TAB
+        WHERE ${tiaojian} (SELECT 1 FROM SYS_ROLE_USER SR
+            WHERE SR.USER_ID = TAB.USER_ID
+            AND SR.ROLE_ID = #{role_id})
+        <if test="user_name != null and user_name != ''">AND TAB.USER_NAME LIKE '%'||#{user_name}||'%'</if>
+        <if test="user_type != null and user_type != ''">AND TAB.USER_TYPE = #{user_type}</if>
+        AND TAB.USER_ISADMIN = '1'
+        AND TAB.BELONG_ORG_ID = #{belong_org_id}
+    </select>
+    <select id="selRoleUserOnPage" resultType="java.util.Map" parameterType="java.util.Map">
+        <![CDATA[
+			SELECT T.* FROM( SELECT TAB.*,ROWNUM AS RN FROM(
+		]]>
+        SELECT TAB.USER_ID AS "user_id",TAB.USER_NAME as "user_name",TAB.USER_ACCOUNT as "user_account",TAB.USER_TYPE AS "user_type"
+        FROM SYS_USER TAB
+        WHERE ${tiaojian} (SELECT 1 FROM SYS_ROLE_USER SR
+            WHERE SR.USER_ID = TAB.USER_ID
+            AND SR.ROLE_ID = #{role_id})
+        <if test="user_name != null and user_name != ''">AND TAB.USER_NAME LIKE '%'||#{user_name}||'%'</if>
+        <if test="user_type != null and user_type != ''">AND TAB.USER_TYPE = #{user_type}</if>
+        AND TAB.USER_ISADMIN = '1'
+        AND TAB.BELONG_ORG_ID = #{belong_org_id}
+        ORDER BY TAB.USER_NAME ASC
+        <![CDATA[
+			) TAB WHERE ROWNUM <= #{pageNo} * #{pageSize}) T WHERE RN > (#{pageNo}-1) * #{pageSize}
+		]]>
+    </select>
+    
+    <!--删除角色用户-->
+    <delete id="delRoleUser" parameterType="java.util.Map">
+        DELETE FROM SYS_ROLE_USER TAB WHERE TAB.ROLE_ID = #{role_id} AND TAB.USER_ID = #{user_id}
+    </delete>
+    
+    <!--查询用户角色-->
+    <select id="selUserRole" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT TAB.ROLE_ID AS "role_id",TAB.ROLE_NAME AS "role_name",TAB.ROLE_CODE AS "role_code"
+        FROM SYS_ROLE TAB
+        LEFT JOIN SYS_ROLE_USER RU ON RU.ROLE_ID = TAB.ROLE_ID
+        WHERE RU.USER_ID = #{id}
+    </select>
+
+    <!--查询用户权限-->
+    <select id="selUserRight" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT TAB.RIGHT_ID AS "id", TAB.RIGHT_NAME AS "name"
+        FROM SYS_RIGHT TAB
+        WHERE EXISTS (SELECT 1 FROM SYS_ROLE_RIGHT RR
+        LEFT JOIN SYS_ROLE_USER RU ON RU.ROLE_ID = RR.ROLE_ID
+        WHERE RR.RIGHT_ID = TAB.RIGHT_ID
+        AND RU.USER_ID = #{id})
+        <if test="xmlx != null and xmlx != ''">AND INSTR(TAB.RIGHT_YWPT,#{xmlx}) > 0</if>
+        AND TAB.RIGHT_PID = #{pid}
+        ORDER BY TAB.CREATED_TIME ASC
+    </select>
+
+    <!--查询用户权限-->
+    <select id="findUserToken" resultType="String" parameterType="java.util.Map">
+        SELECT T.USEREXT_TOKEN AS USEREXT_TOKEN FROM SYS_USEREXT T WHERE T.USER_ID = #{user_id}
+    </select>
+
+    <!--查询菜单按钮权限-->
+    <select id="selRightButton" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT TAB.RIGHT_ID as "right_id", TAB.RIGHT_NAME as "right_name", TAB.RIGHT_CODE as "right_code", TAB.RIGHT_URL as "right_url"
+            , TAB.RIGHT_PID as "right_pid", TAB.RIGHT_ICON as "right_icon",TAB.ATTR_1 as "attr_1",
+            (DECODE(#{isadmin},
+            '2',
+            (SELECT COUNT(1) FROM SYS_ORG_MENU MEN
+                WHERE MEN.RIGHT_ID = TAB.RIGHT_ID
+                    AND MEN.ORG_ID = #{org_id}),
+            (SELECT COUNT(1) FROM SYS_ROLE_RIGHT RR
+            LEFT JOIN SYS_ROLE_USER RU ON RU.ROLE_ID = RR.ROLE_ID
+                WHERE RR.RIGHT_ID = TAB.RIGHT_ID
+                AND RU.USER_ID = #{user_id}))) AS "counts"
+        FROM SYS_RIGHT TAB
+        WHERE TAB.RIGHT_TYPE = 2
+        <if test="right_pid != null and right_pid != ''">AND TAB.RIGHT_PID = #{right_pid}</if>
+        AND INSTR(TAB.RIGHT_YWPT,#{xmlx}) > 0
+        <if test="isadmin == 2 and org_id != 1">
+            AND EXISTS (SELECT 1 FROM SYS_RIGHT A
+                WHERE INSTR(A.ATTR_1,'2') > 0 AND INSTR(A.RIGHT_YWPT, #{xmlx}) > 0
+                START WITH RIGHT_ID = TAB.RIGHT_ID
+                CONNECT BY NOCYCLE PRIOR A.RIGHT_ID = A.RIGHT_PID)
+        </if>
+        <if test="xmlx != 4">
+            AND EXISTS (SELECT 1 FROM SYS_ORG_MENU T WHERE T.ORG_ID = #{org_id} AND T.RIGHT_ID = TAB.RIGHT_ID )
+        </if>
+    </select>
+
+    <!--查询系统日志列表-->
+    <select id="findBizLogOnPageCount" resultType="int" parameterType="java.util.Map">
+        SELECT COUNT(1) FROM SYS_BIZ_LOG TAB
+        <where>
+            <if test="type != null and type != ''">AND TAB.LOG_TYPE = #{type}</if>
+            <if test="zt != null and zt != ''">AND TAB.LOG_ZT = #{zt}</if>
+            <if test="user_id != null and user_id != ''">AND TAB.CREATOR_ID = #{user_id}</if>
+            <if test="org_id != null and org_id != ''">AND TAB.BELONG_ORG_ID = #{org_id}</if>
+        </where>
+    </select>
+    <select id="findBizLogOnPage" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT T.* FROM (SELECT TAB.*, ROWNUM AS RN FROM (
+            SELECT LOG_ID AS "id", LOG_TYPE AS "type",GET_ITEM_VALUE('LOG_TYPE', TAB.LOG_TYPE) AS "type_mc", LOG_CODE AS "code"
+            , LOG_CONT AS "cont", LOG_ZT AS "zt",GET_ITEM_VALUE('LOG_ZT', TAB.LOG_ZT) AS "zt_mc"
+            , EDITOR_ID AS "edit_id", EDITOR_NAME AS "edit_name", EDITED_TIME AS "edit_time"
+            FROM SYS_BIZ_LOG TAB
+            <where>
+                <if test="type != null and type != ''">AND TAB.LOG_TYPE = #{type}</if>
+                <if test="zt != null and zt != ''">AND TAB.LOG_ZT = #{zt}</if>
+                <if test="user_id != null and user_id != ''">AND TAB.CREATOR_ID = #{user_id}</if>
+                <if test="org_id != null and org_id != ''">AND TAB.BELONG_ORG_ID = #{org_id}</if>
+            </where>
+            ORDER BY EDITED_TIME desc
+        <![CDATA[
+			) TAB WHERE ROWNUM <= #{pageNo} * #{pageSize}) T WHERE RN > (#{pageNo}-1) * #{pageSize}
+		]]>
+    </select>
+
+    <delete id="delBbwhZzgx" parameterType="java.util.Map">
+        DELETE FROM SYS_DUSER TAB WHERE TAB.DEPT_ID = #{DEPT_ID} AND TAB.USER_ID = #{USER_ID}
+    </delete>
+
+    <!--通过账户查询用户信息-->
+    <select id="selUserByUserAccount" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT SU.USER_ID, SU.USER_NAME, SU.ATTR_1, SU.USER_ACCOUNT,UE.USEREXT_LXDH
+        FROM SYS_USER SU
+        LEFT JOIN SYS_USEREXT UE ON UE.USER_ID = SU.USER_ID
+        WHERE SU.USER_ACCOUNT = #{user_account}
+    </select>
+
+    <!--自定义菜单-->
+    <select id="loadZdycdTree" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT a.zdycd_id   as "id",
+            decode(a.zdycd_pid,#{pid},'-1',a.zdycd_pid) as "pid",
+            a.zdycd_pid as "pid2",
+            a.zdycd_xm   as "ssxm",
+            a.zdycd_code as "code",
+            a.zdycd_mc   as "mc",
+            a.zdycd_sxh  as "sxh",
+            a.zdycd_url  as "url",
+            a.zdycd_img  as "img",
+            b.zdycd_mc as "pname"
+        FROM sys_zdycd A
+        left join sys_zdycd b on b.zdycd_id = a.zdycd_pid
+        where a.zdycd_id != #{pid}
+        START WITH a.zdycd_id = #{pid}
+        CONNECT BY NOCYCLE PRIOR A.ZDYCD_ID = A.ZDYCD_PID
+    </select>
+
+    <!--查询自定义菜单-->
+    <select id="findZdycd" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT a.zdycd_id as "id",
+            a.zdycd_pid as "pid",
+            a.zdycd_xm as "ssxm",
+            a.zdycd_code as "code",
+            a.zdycd_mc as "mc",
+            a.zdycd_sxh as "sxh",
+            a.zdycd_url as "url",
+            a.zdycd_img as "img",
+            (SELECT COUNT(1) FROM sys_zdycd SR
+                START WITH SR.zdycd_id = a.zdycd_id
+                CONNECT BY PRIOR SR.zdycd_id = SR.zdycd_pid) AS "scn",
+            (SELECT COUNT(1) FROM sys_zdycd T
+                WHERE exists (select 1 from SYS_ZDYCD_ORG so
+                    where so.ZDYCD_ID = t.ZDYCD_ID
+                    and so.ORG_ID = #{org_id}
+                    and so.PTBBWH_ID = #{bbwh_id})
+                START WITH T.zdycd_id = a.zdycd_id
+                CONNECT BY PRIOR T.zdycd_id = T.zdycd_pid) AS "chk"
+        FROM sys_zdycd a
+        WHERE a.zdycd_pid = #{pid} and a.zdycd_xm = #{ssmx}
+        ORDER BY a.zdycd_sxh ASC
+    </select>
+
+    <!--自定义快捷菜单列表 查询-->
+    <select id="loadKjcdListCount" resultType="int" parameterType="java.util.Map">
+        SELECT COUNT(1) FROM (
+            SELECT DISTINCT TAB.KJCD_TYPE AS "kjcd_type",
+            TAB.BELONG_ORG_ID as "org_id",
+            TAB.zdycd_xm AS "ssxm"
+            FROM SYS_ZDYCD_KJCD TAB
+            LEFT JOIN PT_XTRJLX LX ON LX.XTRJLX_ID = TAB.ZDYCD_XM
+            LEFT JOIN PT_ORG ORG ON ORG.ORG_ID = TAB.BELONG_ORG_ID
+            WHERE TAB.USER_ID IS NULL
+            <if test="org_name != null and org_name != ''">AND ORG.ORG_NAME LIKE '%'||#{org_name}||'%'</if>
+            <if test="ssxm_name != null and ssxm_name != ''">AND LX.XTRJLX_NAME LIKE '%'||#{ssxm_name}||'%'</if>
+        )
+    </select>
+    <select id="loadKjcdList" resultType="java.util.Map" parameterType="java.util.Map">
+        <![CDATA[
+			SELECT T.* FROM( SELECT TAB.*,ROWNUM AS RN FROM(
+		]]>
+            SELECT DISTINCT TAB.KJCD_TYPE AS "kjcd_type",
+                TAB.BELONG_ORG_ID as "org_id",
+                TAB.zdycd_xm AS "ssxm",
+                LX.XTRJLX_NAME AS "ssxm_name",
+                ORG.ORG_NAME AS "org_name"
+            FROM SYS_ZDYCD_KJCD TAB
+            LEFT JOIN PT_XTRJLX LX ON LX.XTRJLX_ID = TAB.ZDYCD_XM
+            LEFT JOIN PT_ORG ORG ON ORG.ORG_ID = TAB.BELONG_ORG_ID
+            WHERE TAB.USER_ID IS NULL
+            <if test="org_name != null and org_name != ''">AND ORG.ORG_NAME LIKE '%'||#{org_name}||'%'</if>
+            <if test="ssxm_name != null and ssxm_name != ''">AND LX.XTRJLX_NAME LIKE '%'||#{ssxm_name}||'%'</if>
+            ORDER BY ORG.ORG_NAME ASC
+        <![CDATA[
+			) TAB WHERE ROWNUM <= #{pageNo} * #{pageSize}) T WHERE RN > (#{pageNo}-1) * #{pageSize}
+		]]>
+    </select>
+
+    <!--快捷菜单 查询-->
+    <select id="selKjcdAll" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT TAB.KJCD_ID, TAB.ZDYCD_ID, ZDY.ZDYCD_MC
+        FROM SYS_ZDYCD_KJCD TAB
+        LEFT JOIN SYS_ZDYCD ZDY ON ZDY.ZDYCD_ID = TAB.ZDYCD_ID
+        WHERE TAB.KJCD_TYPE = #{kjcd_type}
+        AND TAB.ZDYCD_XM = #{ssxm}
+        AND TAB.BELONG_ORG_ID = #{org_id}
+    </select>
+
+    <!--删除没有在组织授权中的快捷菜单-->
+    <delete id="delKjcdNotExistsorg" parameterType="java.util.Map">
+        delete from sys_zdycd_kjcd tab
+        where tab.zdycd_id = #{zdycd_id}
+        and tab.belong_org_id = #{org_id}
+        and not exists (select 1
+            from sys_zdycd_org org
+            where org.zdycd_id = tab.zdycd_id
+            and org.org_id = tab.belong_org_id)
+    </delete>
+
+</mapper>
+

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.beoneess.business.mapper.PtMapper">
+
+
+    <select id="insertSeq" resultType="Boolean" parameterType="java.util.Map">
+        CALL CREATEORGSEQ1
+        (${name},
+        ${min},
+        ${max}
+        )
+    </select>
+    
+    <select id="selOrgListByZcspCount" resultType="int" parameterType="java.util.Map">
+        SELECT COUNT(1) FROM PT_ORG TAB
+        <where>
+            <if test="type != null and type != ''">AND TAB.ORG_TYPE = #{type}</if>
+            <if test="orgName != null and orgName != ''">AND TAB.ORG_NAME LIKE '%'||#{orgName}||'%'</if>
+        </where>
+    </select>
+    <select id="selOrgListByZcsp" resultType="java.util.Map" parameterType="java.util.Map">
+        <![CDATA[
+			SELECT T.* FROM( SELECT TAB.*,ROWNUM AS RN FROM(
+		]]>
+        SELECT TAB.ORG_ID AS "id", TAB.ORG_PID AS "pid", O.ORG_NAME AS "pname", TAB.ORG_NAME AS "name", TAB.ORG_CODE AS "code",
+            TAB.ORG_SBKT AS "sbkt", TAB.ORG_TYPE AS "type", TAB.ORG_ZT AS "zt", TAB.ORG_BSLX AS "bslx", TAB.ORG_BSPT AS "bspt"
+        FROM PT_ORG TAB
+            LEFT JOIN PT_ORG O ON O.ORG_ID = TAB.ORG_PID
+        <where>
+            <if test="type != null and type != ''">AND TAB.ORG_TYPE = #{type}</if>
+            <if test="orgName != null and orgName != ''">AND TAB.ORG_NAME LIKE '%'||#{orgName}||'%'</if>
+        </where>
+        ORDER BY TAB.CREATED_TIME DESC
+        <![CDATA[
+			) TAB WHERE ROWNUM <= #{pageNo} * #{pageSize}) T WHERE RN > (#{pageNo}-1) * #{pageSize}
+		]]>
+    </select>
+    
+    <!--组织查询-->
+    <select id="selOrgList" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT ORG_ID AS "id", ORG_NAME AS "name", ORG_TYPE AS "type" FROM PT_ORG TAB
+        <where>
+            <if test="org_zt != null and org_zt != ''">AND TAB.ORG_ZT = #{org_zt}</if>
+            <if test="org_type != null and org_type != ''">AND TAB.ORG_TYPE in (${org_type})</if>
+            <if test="org_sbkt != null and org_sbkt != ''">AND TAB.ORG_SBKT = #{org_sbkt}</if>
+            <if test="hasAdmin != null and hasAdmin != ''">
+                AND EXISTS (
+                    SELECT 1 FROM SYS_USER SU WHERE SU.BELONG_ORG_ID = TAB.ORG_ID AND SU.USER_ISADMIN = '2'
+                )
+            </if>
+            <if test="noAdmin != null and noAdmin != ''">
+                AND NOT EXISTS (
+                    SELECT 1 FROM SYS_USER SU WHERE SU.BELONG_ORG_ID = TAB.ORG_ID AND SU.USER_ISADMIN = '2'
+                    <if test="org_id != null and org_id != ''">AND SU.BELONG_ORG_ID != #{org_id}</if>
+                )
+            </if>
+        </where>
+        ORDER BY TAB.ORG_NAME ASC
+    </select>
+
+    <!--组织修改审批查询-->
+    <select id="orgEditListCount" resultType="int" parameterType="java.util.Map">
+        SELECT COUNT(1) FROM PT_ORG TAB
+        <where>
+            <if test="org_name != null and org_name != ''">AND TAB.ORG_NAME LIKE '%'||#{org_name}||'%'</if>
+        </where>
+    </select>
+    <select id="orgEditList" resultType="java.util.Map" parameterType="java.util.Map">
+        <![CDATA[
+			SELECT T.* FROM( SELECT TAB.*,ROWNUM AS RN FROM(
+		]]>
+        SELECT ORG_ID AS ID, ORG_PID AS PID, ORG_NAME AS NAME,ORG_CODE AS CODE,ORG_SBKT AS SBKT
+            ,ORG_TYPE AS TYPE,ORG_ZT AS ZT,ORG_BJZT AS BJZT
+        FROM PT_ORG TAB
+        <where>
+            <if test="org_name != null and org_name != ''">AND TAB.ORG_NAME LIKE '%'||#{org_name}||'%'</if>
+        </where>
+        <![CDATA[
+			) TAB WHERE ROWNUM <= #{pageNo} * #{pageSize}) T WHERE RN > (#{pageNo}-1) * #{pageSize}
+		]]>
+    </select>
+
+    <!--获取版本类型list-->
+    <select id="getBblx" resultType="java.util.Map" parameterType="java.util.Map">
+        select c.XTRJLX_ID "id",c.XTRJLX_NAME "name",d.DI_KEY "ywmc"
+        from PT_XTRJLX c
+        left join (select b.DI_KEY
+        from SYS_DICT_TYPE a
+        left join SYS_DICT_ITEM b on a.DT_ID = b.DT_ID and a.DT_CODE = 'BBLXDM') d
+        on c.XTRJLX_YWMC = d.DI_KEY where c.XTRJLX_FBZT = '2'
+        order by c.xtrjlx_fbsj desc
+    </select>
+
+    <!--查询发布年份-->
+    <select id="getFbnf" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT DISTINCT TO_CHAR(TAB.PTBBWH_FBSJ,'YYYY') AS "fbnf"
+        FROM PT_PTBBWH TAB
+        WHERE TAB.PTBBWH_FBZT = '2'
+        ORDER BY "fbnf" DESC
+    </select>
+
+    <!--删除已分班-->
+    <delete id="delBbwhZzgx" parameterType="java.util.Map">
+        DELETE FROM PT_BBZZGX TAB WHERE TAB.PTBBWH_ID = #{PTBBWH_ID} AND TAB.ORG_ID = #{ORG_ID}
+    </delete>
+
+    <!--组织用户 查询-->
+    <select id="selOrgUserlistCount" resultType="int" parameterType="java.util.Map">
+        select COUNT(1)
+        from PT_ORG a, SYS_USER b
+        where a.ORG_ID = b.BELONG_ORG_ID
+        <if test="name != null and name != ''">AND b.USER_NAME LIKE '%'||#{name}||'%'</if>
+        <if test="account != null and account != ''">AND b.USER_ACCOUNT LIKE '%'||#{account}||'%'</if>
+        <if test="org_name != null and org_name != ''">AND a.ORG_NAME LIKE '%'||#{org_name}||'%'</if>
+        <if test="isadmin != null and isadmin != ''">AND B.USER_ISADMIN = #{isadmin}</if>
+    </select>
+    <select id="selOrgUserlist" resultType="java.util.Map" parameterType="java.util.Map">
+        <![CDATA[
+			SELECT T.* FROM( SELECT TAB.*,ROWNUM AS RN FROM(
+		]]>
+        select a.ORG_ID       AS "org_id",
+            a.ORG_NAME     AS "org_name",
+            a.ORG_BSLX     AS "bslx",
+            a.ORG_BSPT     AS "bspt",
+            a.ORG_DLWZ     AS "dlwz",
+            a.ORG_TYPE     AS "org_type",
+            b.USER_NAME    AS "name",
+            b.USER_ACCOUNT AS "account",
+            b.USER_ZT      AS "zt",
+            b.USER_TYPE    AS "type",
+            B.USER_ISADMIN AS "isadmin",
+            b.USER_ID      AS "id"
+        from PT_ORG a, SYS_USER b
+        where a.ORG_ID = b.BELONG_ORG_ID
+        <if test="name != null and name != ''">AND b.USER_NAME LIKE '%'||#{name}||'%'</if>
+        <if test="account != null and account != ''">AND b.USER_ACCOUNT LIKE '%'||#{account}||'%'</if>
+        <if test="org_name != null and org_name != ''">AND a.ORG_NAME LIKE '%'||#{org_name}||'%'</if>
+        <if test="isadmin != null and isadmin != ''">AND B.USER_ISADMIN = #{isadmin}</if>
+        ORDER BY b.CREATED_TIME DESC
+        <![CDATA[
+			) TAB WHERE ROWNUM <= #{pageNo} * #{pageSize}) T WHERE RN > (#{pageNo}-1) * #{pageSize}
+		]]>
+    </select>
+
+    <!--广告内容查询 查询-->
+    <select id="selGgnrOnPageCount" resultType="int" parameterType="java.util.Map">
+        SELECT COUNT(1) FROM PT_GGNR TAB
+        <where>
+            <if test="mc != null and mc != ''">AND TAB.GGNR_MC LIKE '%'||#{mc}||'%'</if>
+            <if test="pid != null and pid != ''">AND TAB.GGW_ID = #{pid}</if>
+        </where>
+    </select>
+    <select id="selGgnrOnPage" resultType="java.util.Map" parameterType="java.util.Map">
+        <![CDATA[
+			SELECT T.* FROM( SELECT TAB.*,ROWNUM AS RN FROM(
+		]]>
+            SELECT TAB.GGNR_ID AS "id",TAB.GGW_ID AS "pid",TAB.GGNR_MC AS "mc",TAB.GGNR_BTIME AS "btime",TAB.GGNR_ETIME AS "etime"
+                ,TAB.GGNR_ZT AS "zt",TAB.GGNR_FJ AS "fj",GGW.GGW_MC AS "pname"
+            FROM PT_GGNR TAB
+            LEFT JOIN PT_GGW GGW ON GGW.GGW_ID = TAB.GGW_ID
+            <where>
+                <if test="mc != null and mc != ''">AND TAB.GGNR_MC LIKE '%'||#{mc}||'%'</if>
+                <if test="pid != null and pid != ''">AND TAB.GGW_ID = #{pid}</if>
+            </where>
+            ORDER BY TAB.CREATED_TIME DESC
+        <![CDATA[
+			) TAB WHERE ROWNUM <= #{pageNo} * #{pageSize}) T WHERE RN > (#{pageNo}-1) * #{pageSize}
+		]]>
+    </select>
+
+</mapper>
+

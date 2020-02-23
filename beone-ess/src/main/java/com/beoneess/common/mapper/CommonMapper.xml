@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.beoneess.common.mapper.CommonMapper">
+    <!--列表查询  2019-08-07 -->
+    <select id="find" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT ${fieldName} FROM ${tablename}
+        <if test="left_join">${left_join}</if>
+        <if test="keys != null and keys != ''">
+            <where>
+                <foreach collection="keys" item="k" index="index" open="" separator=" and " close="">
+                    ${k} = ${params[k]}
+                </foreach>
+            </where>
+        </if>
+        <if test="groupName != null and groupName != ''">
+            GROUP BY ${groupName}
+        </if>
+        <if test="orderName != null and orderName != ''">
+            ORDER BY ${orderName}
+        </if>
+    </select>
+    
+    <!--数量查询  2019-08-07 -->
+    <select id="findOnPageCount" resultType="int" parameterType="java.util.Map">
+        SELECT COUNT(1) FROM ${tablename}
+        <where>
+            <if test="keys != null and keys != ''">
+                <foreach collection="keys" item="k" index="index" open="" separator=" and " close="">
+                    ${k} = ${params[k]}
+                </foreach>
+            </if>
+            <if test="keys2 != null and keys2 != '' and keys2.length > 0">
+                AND
+                <foreach collection="keys2" item="k" index="index" open="" separator=" and " close="">
+                    ${k} LIKE '%'||${params2[k]}||'%'
+                </foreach>
+            </if>
+        </where>
+        <if test="groupName != null and groupName != ''">
+            GROUP BY ${groupName}
+        </if>
+        <if test="orderName != null and orderName != ''">
+            ORDER BY ${orderName}
+        </if>
+    </select>
+
+    <!--分页查询 2019-08-07-->
+    <select id="findOnPage" resultType="java.util.Map" parameterType="java.util.Map">
+        <![CDATA[
+			SELECT T.* FROM( SELECT TAB.*,ROWNUM AS RN FROM(
+		]]>
+            SELECT ${fieldName} FROM ${tablename}
+            <where>
+                <if test="keys != null and keys != ''">
+                    <foreach collection="keys" item="k" index="index" open="" separator=" and " close="">
+                        ${k} = ${params[k]}
+                    </foreach>
+                </if>
+                <if test="keys2 != null and keys2 != '' and keys2.length > 0">
+                    AND
+                    <foreach collection="keys2" item="k" index="index" open="" separator=" and " close="">
+                        ${k} LIKE '%'||${params2[k]}||'%'
+                    </foreach>
+                </if>
+            </where>
+            <if test="groupName != null and groupName != ''">
+                GROUP BY ${groupName}
+            </if>
+            <if test="orderName != null and orderName != ''">
+                ORDER BY ${orderName}
+            </if>
+        <![CDATA[
+			) TAB WHERE ROWNUM <= #{pageNo} * #{pageSize}) T WHERE RN > (#{pageNo}-1) * #{pageSize}
+		]]>
+    </select>
+
+    <!--添加 2019-08-07-->
+    <insert id="insert" parameterType="java.util.Map" >
+        insert into ${tablename}
+        <foreach collection="keys" item="k" index="index" open="(" separator="," close=")">
+            ${k}
+        </foreach>
+        values
+        <foreach collection="keys" item="k" index="index" open="(" separator="," close=")">
+            <choose>
+                <when test="clobArr != null and k.contains(clobArr)">
+                    #{params[${k}],jdbcType=CLOB}
+                </when>
+                <when test="k == 'ATTR_4'">
+                    #{params[${k}],jdbcType=CLOB}
+                </when>
+                <otherwise>
+                    ${params[k]}
+                </otherwise>
+            </choose>
+
+        </foreach>
+    </insert>
+
+    <!--修改 2019-08-07-->
+    <update id="update" parameterType="java.util.Map" >
+        update ${tablename}
+        <set>
+            <foreach collection="keys" item="k" index="index" open="" separator="," close="">
+                <choose>
+                    <when test="clobArr != null and k.contains(clobArr)">
+                        ${k} = #{params[${k}],jdbcType=CLOB}
+                    </when>
+                    <when test="k == 'ATTR_4'">
+                        ${k} = #{params[${k}],jdbcType=CLOB}
+                    </when>
+                    <otherwise>
+                        ${k}=${params[k]}
+                    </otherwise>
+                </choose>
+            </foreach>
+        </set>
+        <where>
+            <foreach collection="keys2" item="j" index="index" open="" separator="and" close="">
+                ${j} in (${params2[j]})
+            </foreach>
+        </where>
+    </update>
+
+    <!--删除 2019-08-07-->
+    <delete id="delete" parameterType="java.util.Map" >
+        delete from ${tablename}
+        <where>
+            <foreach collection="keys" item="k" index="index" open="" separator=" and " close="">
+                ${k} in (${params[k]})
+            </foreach>
+        </where>
+    </delete>
+
+    <!--获取序列 2019-08-07-->
+    <select id="getNextId" resultType="String" parameterType="java.util.Map">
+        select ${seqName} from dual
+    </select>
+
+    <!--特殊查询 2019-08-07-->
+    <select id="selectFieldsByOther" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT ${fieldName} FROM ${tablename}
+        <where>
+            ${tiaojian}
+        </where>
+        <if test="groupName != null and groupName != ''">
+            GROUP BY ${groupName}
+        </if>
+        <if test="orderName != null and orderName != ''">
+            ORDER BY ${orderName}
+        </if>
+    </select>
+
+    <!-- 查询单挑数据 2019-08-07-->
+    <select id="getByKeys" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT * FROM ${tablename}
+        <if test="keys != null and keys != ''">
+            <where>
+                <foreach collection="keys" item="k" index="index" open="" separator=" and " close="">
+                    ${k} in (${params[k]})
+                </foreach>
+            </where>
+        </if>
+    </select>
+    <!--通用添加多条数据-->
+    <insert id="addAll" parameterType="java.util.Map" >
+        insert into ${tablename}
+        <foreach collection="keys" item="k" index="index" open="(" separator="," close=")">
+            ${k}
+        </foreach>
+        <foreach collection="paramsList" item="params" index="index" open=" " separator="union all" close=" ">
+            <foreach collection="keys" item="k" index="index" open="select " separator="," close=" from dual">
+                ${params[k]}
+            </foreach>
+        </foreach>
+    </insert>
+
+    <!--调用函数获取内容-->
+    <select id="selContent" resultType="String" parameterType="java.util.Map">
+        SELECT ${method}(${code}) FROM DUAL
+    </select>
+
+
+
+
+
+
+    <insert id="addandSelect" parameterType="java.util.Map" >
+        insert into ${tablename}
+       		(${keys})
+        ${params}
+
+    </insert>
+
+    <delete id="deletebyOther" parameterType="java.util.Map" >
+        delete from ${tablename}
+        <where>
+            ${tiaojian}
+        </where>
+    </delete>
+
+    <update id="updateOther" parameterType="java.util.Map">
+    	 update ${tablename}
+    </update>
+
+    <select id="getAllByKeys" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT * FROM ${tablename}
+        <if test="keys != null and keys != ''">
+            <where>
+                <foreach collection="keys" item="k" index="index" open="" separator=" and " close="">
+                    ${k} in (${params[k]})
+                </foreach>
+            </where>
+        </if>
+        <if test="orderName != null and orderName != ''">
+            ORDER BY ${orderName}
+        </if>
+    </select>
+
+    <select id="selectAllByKeys" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT * FROM ${tablename}
+        <if test="keys != null and keys != ''">
+            <where>
+                <foreach collection="keys" item="k" index="index" open="" separator=" and " close="">
+                    ${k} = ${params[k]}
+                </foreach>
+            </where>
+        </if>
+        <if test="orderName != null and orderName != ''">
+            ORDER BY ${orderName}
+        </if>
+    </select>
+
+    <!-- statementType 声明指向的是什么类型，其中CALLABLE是执行存储过程和函数的-->
+    <select id="cellProcedure" statementType="CALLABLE">
+    	call ${Name}(${Params})
+    </select>
+
+
+
+</mapper>
+

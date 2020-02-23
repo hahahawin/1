@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.beoneess.business.mapper.ZcsbMapper">
+
+    <!--房间数量查询  lch  2019-10-14 -->
+    <select id="findFjxxOnPageCount" resultType="int" parameterType="java.util.Map">
+        SELECT COUNT(1) FROM ZCSB_FJXX TAB
+        <where>
+            <if test="JZW_ID != null and JZW_ID != ''">AND TAB.JZWJBXX_ID = #{JZW_ID}</if>
+            <if test="LC_ID != null and LC_ID != ''">AND TAB.LCXX_ID = #{LC_ID}</if>
+            <if test="MC != null and MC != ''">AND TAB.FJXX_MC LIKE '%'||#{MC}||'%'</if>
+            <if test="ORG_ID != null and ORG_ID != ''">AND TAB.BELONG_ORG_ID = #{ORG_ID}</if>
+        </where>
+    </select>
+
+    <!--房间列表查询  lch  2019-10-14 -->
+    <select id="findFjxxOnPage" resultType="java.util.Map" parameterType="java.util.Map">
+        <![CDATA[
+			SELECT T.* FROM( SELECT TAB.*,ROWNUM AS RN FROM(
+		]]>
+        SELECT TAB.*, LC.LCXX_BH, JZW.JZWJBXX_JZWMC
+        FROM ZCSB_FJXX TAB
+        LEFT JOIN ZCSB_LCXX LC ON LC.LCXX_ID = TAB.LCXX_ID
+        LEFT JOIN ZCSB_JZWJBXX JZW ON JZW.JZWJBXX_ID = TAB.JZWJBXX_ID
+        <where>
+            <if test="JZW_ID != null and JZW_ID != ''">AND TAB.JZWJBXX_ID = #{JZW_ID}</if>
+            <if test="LC_ID != null and LC_ID != ''">AND TAB.LCXX_ID = #{LC_ID}</if>
+            <if test="MC != null and MC != ''">AND TAB.FJXX_MC LIKE '%'||#{MC}||'%'</if>
+            <if test="ORG_ID != null and ORG_ID != ''">AND TAB.BELONG_ORG_ID = #{ORG_ID}</if>
+        </where>
+        ORDER BY TAB.CREATED_TIME DESC
+        <![CDATA[
+			) TAB WHERE ROWNUM <= #{pageNo} * #{pageSize}) T WHERE RN > (#{pageNo}-1) * #{pageSize}
+		]]>
+    </select>
+
+    <!--设备账户分页查询-->
+    <select id="selSmhlistCount" resultType="int" parameterType="java.util.Map">
+        SELECT COUNT(1) FROM SMH_SETTING TAB
+        <where>
+            <if test="account != null and account != ''">AND TAB.SETTING_ACCOUNT LIKE '%'||#{account}||'%'</if>
+        </where>
+    </select>
+    <select id="selSmhlist" resultType="java.util.Map" parameterType="java.util.Map">
+        <![CDATA[
+			SELECT T.* FROM( SELECT TAB.*,ROWNUM AS RN FROM(
+		]]>
+        SELECT TAB.SETTING_ID AS "id",
+            TAB.SETTING_ACCOUNT AS "account",
+            TAB.SETTING_PWD AS "pwd",
+            TAB.SETTING_SFKT AS "sfkt",
+            TAB.SETTING_DYZT AS "dyzt",
+            TAB.CREATOR_NAME AS "name",
+            TAB.CREATED_TIME AS "time",
+            TAB.BELONG_ORG_ID AS "org_id",
+            ORG.ORG_NAME as "org_name"
+        FROM SMH_SETTING TAB
+        LEFT JOIN PT_ORG ORG ON ORG.ORG_ID = TAB.BELONG_ORG_ID
+        <where>
+            <if test="account != null and account != ''">AND TAB.SETTING_ACCOUNT LIKE '%'||#{account}||'%'</if>
+        </where>
+        ORDER BY TAB.CREATED_TIME DESC
+        <![CDATA[
+			) TAB WHERE ROWNUM <= #{pageNo} * #{pageSize}) T WHERE RN > (#{pageNo}-1) * #{pageSize}
+		]]>
+    </select>
+
+    <insert id="insertSblxMb" parameterType="java.util.Map">
+        INSERT INTO SBZC_LX_MOULD(MOULD_ID,LX_ID,LX_WEB_MODEL,LX_APP_MODEL,BELONG_ORG_ID)VALUES(#{MOULD_ID,jdbcType=VARCHAR},#{LX_ID,jdbcType=VARCHAR},#{LX_WEB_MODEL,jdbcType=VARCHAR},#{LX_APP_MODEL,jdbcType=VARCHAR},#{BELONG_ORG_ID,jdbcType=VARCHAR})
+    </insert>
+
+    <insert id="insertWebSbMb" parameterType="java.util.Map">
+        INSERT INTO SBZC_LX_MOULD(MOULD_ID,LX_ID,LX_WEB_MODEL,BELONG_ORG_ID)VALUES(#{id},#{lx_id},#{mb},#{org_id})
+    </insert>
+
+    <insert id="insertAppSbMb" parameterType="java.util.Map">
+        INSERT INTO SBZC_LX_MOULD(MOULD_ID,LX_ID,LX_APP_MODEL,BELONG_ORG_ID)VALUES(#{id},#{lx_id},#{mb},#{org_id})
+    </insert>
+
+    <!-- 设置web 端模板 -->
+    <update id="setWebSbMb" parameterType="java.util.Map">
+        UPDATE SBZC_LX_MOULD TAB SET TAB.LX_WEB_MODEL = #{mb} WHERE TAB.MOULD_ID = #{id} AND TAB.BELONG_ORG_ID = #{org_id}
+    </update>
+
+    <!-- 设置app 端模板 -->
+    <update id="setAppSbMb" parameterType="java.util.Map">
+        UPDATE SBZC_LX_MOULD TAB SET TAB.LX_APP_MODEL = #{mb} WHERE TAB.MOULD_ID = #{id} AND TAB.BELONG_ORG_ID = #{org_id}
+    </update>
+
+    <!--查询web端模板代码-->
+    <select id="selSblxWebMb" parameterType="java.util.Map" resultType="String">
+        SELECT TAB.LX_WEB_MODEL
+        FROM SBZC_LX_MOULD TAB
+        LEFT JOIN SBZC_LX LX ON LX.LX_ID = TAB.LX_ID
+        WHERE LX.LX_MLDM = #{mldm}
+        AND (TAB.BELONG_ORG_ID = #{org_id} OR TAB.BELONG_ORG_ID = 1)
+        AND ROWNUM = 1
+    </select>
+
+    <!--查询web端模板代码-->
+    <select id="selSblxAppMb" parameterType="java.util.Map" resultType="String">
+        SELECT TAB.LX_APP_MODEL
+        FROM SBZC_LX_MOULD TAB
+        LEFT JOIN SBZC_LX LX ON LX.LX_ID = TAB.LX_ID
+        WHERE LX.LX_MLDM = #{mldm}
+        AND TAB.BELONG_ORG_ID = #{org_id}
+    </select>
+    
+    <!--通过账户查询资产设备类型-->
+    <select id="selZcsbLxByAccount" parameterType="java.util.Map" resultType="com.beoneess.business.domain.SbzcLx">
+        SELECT TAB.LX_MLDM AS mldm,TAB.LX_MLMC AS mlmc
+        ,NVL(MO.LX_WEB_MODEL,(SELECT MO2.LX_WEB_MODEL FROM SBZC_LX_MOULD MO2 WHERE MO2.LX_ID = TAB.LX_ID AND MO2.BELONG_ORG_ID = 1)) AS htmlmodle
+        FROM SBZC_LX TAB
+        LEFT JOIN SBZC_SBXX SBXX ON SBXX.SBXX_LB = TAB.LX_MLDM
+        LEFT JOIN SBZC_LX_MOULD MO ON MO.LX_ID = TAB.LX_ID
+        AND MO.BELONG_ORG_ID = SBXX.BELONG_ORG_ID
+        WHERE SBXX.SBXX_ACCOUNT = #{account}
+    </select>
+
+</mapper>
+

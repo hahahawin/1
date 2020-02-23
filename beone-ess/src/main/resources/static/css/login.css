@@ -1,0 +1,192 @@
+body,html {
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 100%;
+	min-height: 800px;
+	overflow: hidden;
+	background:url(../img/login/2020/bg.png);
+	background-size: 100% 100%;
+	color: #FFFFFF;
+	min-height: 800px;
+	overflow-y:auto;
+}
+
+input::-webkit-input-placeholder{
+	color:rgba(255,255,255,1);
+	background:#1B2A56;
+}
+input::-moz-placeholder{   /* Mozilla Firefox 19+ */
+	color:rgba(255,255,255,1);
+	background:#1B2A56;
+}
+input:-moz-placeholder{    /* Mozilla Firefox 4 to 18 */
+	color:rgba(255,255,255,1);
+	background:#1B2A56;
+}
+input:-ms-input-placeholder{  /* Internet Explorer 10-11 */
+	color:rgba(255,255,255,1);
+	background:#1B2A56;
+}
+/*输入框缓存背景颜色*/
+input:-webkit-autofill {
+	-webkit-box-shadow: 0 0 0 1000px rgba(27,42,86,1) inset !important;
+	-moz-box-shadow:0 0 0 1000px rgba(27,42,86,1) inset !important; /*firefox*/
+	/*!*只有谷歌兼容 字体颜色*!*/
+	-webkit-text-fill-color: #fff !important;
+}
+.head_div{
+    width: 100%;
+    font-size: 14px;
+    height: 36px;
+    margin-top: 24px;
+	/*border:1px solid red;*/
+    /*position:absolute;*/
+}
+
+.head_div_line{
+    width: 1200px;
+    margin: 0px auto;
+}
+.content{
+	width: 100%;
+	height:calc(100% - 112px);
+	/*height:calc(100% - 140px);*/
+	border:1px solid transparent;
+}
+.login_content{
+    width: 1330px;
+    height: 686px;
+	margin:  auto;
+	/*margin: calc((100% - 1750px)/2) auto ;*/
+	/*margin: 100px auto 0px auto;*/
+	border:1px solid transparent ;
+    /*position: fixed;*/
+    /*top: 0px;*/
+    /*left: 0px;*/
+    /*right: 0px;*/
+    /*bottom: 0px;*/
+
+}
+.content_left{
+	float: left;
+	width: 731px;
+	height: 686px;
+	background:url(../img/login/2020/img_bg.png) no-repeat center center;
+}
+.content_right{
+	float: right;
+	width: 420px;
+	height: 407px;
+	margin-top: 117px;
+	border:1px solid rgba(42,104,216,1);
+	background:rgba(255,255,255,0.05);
+}
+.content_right_title{
+	width:83px;
+	height:20px;
+	font-size:20px;
+	font-family:Microsoft YaHei;
+	font-weight:400;
+	color:rgba(255,255,255,1);
+	margin: 54px auto 0px auto;
+}
+.account{
+	width:339px;
+	height:47px;
+	line-height:47px;
+	border:1px solid #1D3B77;
+	/*border:1px solid #2753a8;*/
+	border-radius:5px 5px 5px 5px;
+	margin: 44px auto 0px auto;
+}
+.account:hover{
+	border:1px solid #2753a8;
+}
+.password{
+	width:339px;
+	height:47px;
+	border:1px solid #1D3B77;
+	border-radius:5px 5px 5px 5px;
+	margin: 28px auto 0px auto;
+}
+.password:hover{
+	border:1px solid #2753a8;
+}
+.imgUser{
+	float: left;
+	width: 20px;
+	height:22px;
+	margin-top: 13px;
+	margin-left: 15px;
+	background:url(../img/login/2020/login_icon_user.png) no-repeat center center;
+}
+.imgMm{
+	float: left;
+	width: 20px;
+	height:22px;
+	margin-top: 13px;
+	margin-left: 15px;
+	background:url(../img/login/2020/login_icon_mm.png) no-repeat center center;
+}
+.inputtext{
+	float: left;
+	margin: auto auto auto 15px;
+	width:286px;
+	height:47px;
+	background:#1B2A56;
+	border:none;
+	outline:medium;
+	font-size:16px;
+	font-family:Microsoft YaHei;
+	font-weight:400;
+	color:rgba(255,255,255,1);
+}
+.inputtext2{
+	float: left;
+	margin: auto auto auto 15px;
+	width:286px;
+	height:47px;
+	background:#1A284F;
+	border:none;
+	outline:medium;
+	font-size:16px;
+	font-family:Microsoft YaHei;
+	font-weight:400;
+	color:rgba(255,255,255,1);
+}
+
+.login_button{
+	width:339px;
+	height:47px;
+	line-height: 47px;
+	background:rgba(42,104,216,1);
+	border-radius:5px 5px 5px 5px;
+	margin: 34px auto 0px auto;
+	text-align: center;
+	font-size:18px;
+	font-family:Microsoft YaHei;
+	font-weight:400;
+	color:rgba(255,255,255,1);
+}
+.wjmm{
+	width:72px;
+	height:14px;
+	font-size:14px;
+	font-family:Microsoft YaHei;
+	font-weight:400;
+	color:rgba(42,104,216,1);
+	margin-top: 23px;
+	margin-right: 40px;
+	float: right;
+}
+.wjmm:hover{
+	cursor:pointer;
+}
+.foot_div{
+	font-size: 12px;
+	bottom:20px;
+	/*position:absolute;*/
+	text-align:center;
+	width:100%;
+}

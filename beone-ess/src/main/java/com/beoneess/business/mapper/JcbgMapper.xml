@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.beoneess.business.mapper.JcbgMapper">
+
+    <select id="findBqDq" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT * FROM JCBG_BQGL where CREATOR_ID=${user_id} and BQGL_ZT='1' and BQGL_TXSJ <![CDATA[ < ]]> sysdate+(1/(24*60))*5 and  BQGL_TXSJ <![CDATA[ > ]]> sysdate
+    </select>
+
+    <update id="updateBqDq" parameterType="java.util.Map" >
+        update JCBG_BQGL set BQGL_ZT=${ZT} where CREATOR_ID = ${user_id} and BQGL_ZT='1' and BQGL_TXSJ <![CDATA[ < ]]> sysdate
+    </update>
+
+    <!--删除-->
+    <delete id="delFzxx" parameterType="java.util.Map">
+        DELETE FROM JCBG_FZRY TAB WHERE TAB.FZXX_ID = #{FZXX_ID} AND TAB.USER_ID = #{USER_ID}
+    </delete>
+</mapper>
+

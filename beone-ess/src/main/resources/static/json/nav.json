@@ -1,0 +1,29 @@
+{
+  "data": [
+    {
+      "id": 1,
+      "img": "img/nav_icon_home@2x.png",
+      "url": "",
+      "title": "系统权限",
+      "second":[{"id":101,"img":"img/nav_icon_home@2x.png","url":"/loadJsp?page=sys/sysRight","title":"组织机构菜单维护"},
+                {"id":102,"img":"img/nav_icon_home@2x.png","url":"/loadJsp?page=sys/test","title":"公共方法测试"},
+                {"id":103,"img":"img/nav_icon_home@2x.png","url":"/loadJsp?page=sys/dataInfo","title":"数据字典"},
+                {"id":104,"img":"img/nav_icon_home@2x.png","url":"/loadJsp?page=sys/sysOrgMenu","title":"组织机构菜单授权"},
+                {"id":105,"img":"img/nav_icon_home@2x.png","url":"/loadJsp?page=sys/sysConfig","title":"系统参数"},
+                {"id":106,"img":"img/nav_icon_home@2x.png","url":"/loadJsp?page=sys/sysBizLog","title":"日志管理"},
+                {"id":107,"img":"img/nav_icon_home@2x.png","url":"/loadJsp?page=sys/sysDept","title":"部门管理"}
+      ]
+    },{
+      "id": 2,
+      "img": "img/nav_icon_home@2x.png",
+      "url": "",
+      "title": "学校管理",
+      "second":[{"id":201,"img":"img/nav_icon_home@2x.png","url":"/loadJsp?page=sys/sysXdgl","title":"学段管理"},
+        {"id":202,"img":"img/nav_icon_home@2x.png","url":"/loadJsp?page=sys/sysXndgl","title":"学年度管理"},
+        {"id":203,"img":"img/nav_icon_home@2x.png","url":"/loadJsp?page=sys/sysXqgl","title":"学期管理"},
+        {"id":204,"img":"img/nav_icon_home@2x.png","url":"/loadJsp?page=sys/sysJbgl","title":"届别管理"}
+      ]
+    }
+  ]
+}
+

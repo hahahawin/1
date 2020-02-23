@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.beoneess.reportForm.mapper.LogMapper">
+
+    <!-- 查询当天业务操作情况 -->
+    <select id="findOneDayLogType" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT DI.DI_VALUE as "di_value", COUNT(1) AS "scn"
+            FROM SYS_DICT_ITEM DI
+            LEFT JOIN SYS_DICT_TYPE DT
+                ON DT.DT_ID = DI.DT_ID
+            LEFT JOIN SYS_BIZ_LOG SBL
+                ON SBL.LOG_TYPE = DI.DI_KEY
+                AND TO_CHAR(SBL.CREATED_TIME, 'YYYY-MM-DD') =
+                TO_CHAR(SYSDATE, 'YYYY-MM-DD')
+            WHERE DT.DT_CODE = 'LOG_TYPE'
+                <if test="belong_org_id != null and belong_org_id != ''">AND SBL.BELONG_ORG_ID = #{belong_org_id}</if>
+            GROUP BY DI.DI_VALUE
+    </select>
+
+    <!-- 查询当天业务操作人员情况 -->
+    <select id="findOneDayLogUser" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT TAB.CREATOR_ID AS "creator_id", TAB.CREATOR_NAME as "creator_name", COUNT(1) AS "scn"
+            FROM SYS_BIZ_LOG TAB
+        WHERE TO_CHAR(TAB.CREATED_TIME, 'YYYY-MM-DD') =
+            TO_CHAR(SYSDATE, 'YYYY-MM-DD')
+            <if test="belong_org_id != null and belong_org_id != ''">AND SBL.BELONG_ORG_ID = #{belong_org_id}</if>
+        GROUP BY TAB.CREATOR_ID, TAB.CREATOR_NAME
+    </select>
+
+</mapper>
