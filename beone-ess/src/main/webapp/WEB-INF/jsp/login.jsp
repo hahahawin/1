@@ -8,7 +8,7 @@
     <meta http-equiv="pragma" content="no-cache">
     <meta http-equiv="cache-control" content="no-cache">
     <meta http-equiv="expires" content="0">
-    <title>APCOS智慧教育服务授权管理云平台哈哈</title>
+    <title>APCOS智慧教育服务授权管理云平台</title>
     <link rel="shortcut icon" href="<%=basePath%>img/jx.png" />
     <link rel="stylesheet" href="<%=basePath%>css/login.css" type="text/css" media="screen" />
     <script src="<%=basePath%>js/jquery.min.js"></script>
@@ -91,7 +91,7 @@
 </div>
 
 <div class="foot_div">
-    重庆金鑫智慧科技有限公司 ©2019-2020版权所有 BETA V3.3 TEL:400-000-3877
+    重庆金鑫智慧科技有限公司 ©2019-9999版权所有 BETA V3.3 TEL:400-000-3877
 </div>
 <script>
 $(function () {
