@@ -8,7 +8,7 @@
     <meta http-equiv="pragma" content="no-cache">
     <meta http-equiv="cache-control" content="no-cache">
     <meta http-equiv="expires" content="0">
-    <title>APCOS智慧教育服务授权管理云平台</title>
+    <title>APCOS智慧教育服务授权管理云平台哈哈</title>
     <link rel="shortcut icon" href="<%=basePath%>img/jx.png" />
     <link rel="stylesheet" href="<%=basePath%>css/login.css" type="text/css" media="screen" />
     <script src="<%=basePath%>js/jquery.min.js"></script>
